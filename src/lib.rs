@@ -1,10 +1,10 @@
 pub mod input;
+pub mod map;
+pub mod network;
 pub mod objects;
+pub mod physics;
 pub mod screen;
 pub mod ubevy;
-pub mod map;
-pub mod physics;
-pub mod network;
 
 const SHIP_TURN_SPEED: f32 = 8.0; // arbitrary, adjust as needed
 const SHIP_SPEED: f32 = 600.0; // arbitrary, adjust as needed

@@ -30,9 +30,7 @@ pub async fn get_map_from_server() -> Result<RaceMap, JsValue> {
 
     let request = Request::new_with_str_and_init(&url, &opts)?;
 
-    request
-        .headers()
-        .set("Accept", "application/json")?;
+    request.headers().set("Accept", "application/json")?;
 
     let window = web_sys::window().unwrap();
     let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
 use bevy_rapier2d::prelude::*;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RaceMap {
@@ -10,16 +10,20 @@ pub struct RaceMap {
 }
 
 impl RaceMap {
-    pub fn put_into_world(&self, commands: &mut Commands, handle: Handle<ColorMaterial>, mut meshes: ResMut<Assets<Mesh>>) {
-        
+    pub fn put_into_world(
+        &self,
+        commands: &mut Commands,
+        handle: Handle<ColorMaterial>,
+        mut meshes: ResMut<Assets<Mesh>>,
+    ) {
         let mut rails = Vec::new();
-        
+
         for index in 0..self.track_points.len() {
             let curr_point = self.track_points.get(index);
             let next_point = self.track_points.get(index + 1);
 
             if let None = next_point {
-                break
+                break;
             }
 
             let curr_point = curr_point.unwrap();
@@ -37,7 +41,7 @@ impl RaceMap {
             let next_point = self.track_points_other.get(index + 1);
 
             if let None = next_point {
-                break
+                break;
             }
 
             let curr_point = curr_point.unwrap();
@@ -57,7 +61,7 @@ impl RaceMap {
         RaceMap {
             track_points: self.track_points.to_vec(),
             track_points_other: self.track_points_other.to_vec(),
-            finish_line: self.finish_line.to_owned()
+            finish_line: self.finish_line.to_owned(),
         }
     }
 
@@ -75,7 +79,7 @@ impl RaceMap {
 pub struct TrackRail {
     pos: (f32, f32),
     length: f32,
-    rot: f32
+    rot: f32,
 }
 
 impl TrackRail {
@@ -84,30 +88,38 @@ impl TrackRail {
         length: f32,
         rot: f32,
         color: Handle<ColorMaterial>,
-        meshes: &mut ResMut<Assets<Mesh>>
+        meshes: &mut ResMut<Assets<Mesh>>,
     ) -> (bevy::prelude::SpriteBundle, ColliderBundle) {
         let mut transform = Transform::from_xyz(pos.0, pos.1, 0.0); // * length);
-        // transform.translation = Vec3::new(pos.0 - (length/2.0), pos.1 - (length/2.0), 0.0);
+                                                                    // transform.translation = Vec3::new(pos.0 - (length/2.0), pos.1 - (length/2.0), 0.0);
         transform.rotation = Quat::from_rotation_z(rot);
 
         let sprite = SpriteBundle {
             material: color,
-            mesh: meshes.add(Mesh::from(bevy::prelude::shape::Quad { size: Vec2::new(length, 1.0), flip: false})),
+            mesh: meshes.add(Mesh::from(bevy::prelude::shape::Quad {
+                size: Vec2::new(length, 1.0),
+                flip: false,
+            })),
             sprite: Sprite::new(Vec2::new(length, 1.0)),
-            transform, 
+            transform,
             ..Default::default()
         };
 
         (
-            sprite
-            , ColliderBundle {
+            sprite,
+            ColliderBundle {
                 shape: ColliderShape::cuboid(length, 1.0),
                 collider_type: ColliderType::Solid,
                 position: (Vec2::new(pos.0, pos.1), 0.4).into(),
-                material: ColliderMaterial { friction: 0.2, restitution: 0.3, ..Default::default() },
+                material: ColliderMaterial {
+                    friction: 0.2,
+                    restitution: 0.3,
+                    ..Default::default()
+                },
                 mass_properties: ColliderMassProps::Density(2.0),
                 ..Default::default()
-            })
+            },
+        )
     }
 }
 
@@ -119,22 +131,21 @@ impl TrackPoint {
         &self,
         other: &TrackPoint,
         handle: Handle<ColorMaterial>,
-        meshes: &mut ResMut<Assets<Mesh>>
+        meshes: &mut ResMut<Assets<Mesh>>,
     ) -> (SpriteBundle, ColliderBundle) {
         // commands.insert_resource()
         // slope to degrees; see https://www.desmos.com/calculator/vihl4hiveh
         let degree = ((self.1 - other.1) / (self.0 - other.0)).atan(); // * (180.0 / PI); // unit conversion: radians to euler degrees
-                                                                           // nvm lol radians are better
+                                                                       // nvm lol radians are better
 
         // find distance between two points
-        let length = (
-            (self.0 - other.0).powi(2)
-            + (self.1 - other.1).powi(2)
-        ).sqrt().sqrt();
+        let length = ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2))
+            .sqrt()
+            .sqrt();
         #[allow(unused_doc_comments)]
         /// expanded
-        /// 
-        /// side2 |\ result 
+        ///
+        /// side2 |\ result
         ///       |_\     (hypotenuse)
         ///       side1
         ///
@@ -143,16 +154,12 @@ impl TrackPoint {
         ///     let side2 = (self.1 - other.1);
         ///     (side1.powi(2) + side2.powi(2)).sqrt()
         /// }
-        
         let center_point = ((self.0 + other.0) / 2.0, (self.1 + other.1) / 2.0);
-        println!("Making line with origin {:?} and rot {:?} from points {:?} and {:?}", center_point, degree, self, other);
+        println!(
+            "Making line with origin {:?} and rot {:?} from points {:?} and {:?}",
+            center_point, degree, self, other
+        );
 
-        TrackRail::from_len_deg(
-            center_point,
-            length,
-            degree,
-            handle,
-            meshes,
-        )
+        TrackRail::from_len_deg(center_point, length, degree, handle, meshes)
     }
 }

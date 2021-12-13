@@ -1,5 +1,9 @@
+use crate::{
+    objects::Ship,
+    physics::{angular::AngularMomentum, velocity::Velocity},
+    SHIP_SPEED, SHIP_TURN_SPEED,
+};
 use bevy::prelude::*;
-use crate::{SHIP_TURN_SPEED, SHIP_SPEED, objects::Ship, physics::{velocity::Velocity, angular::AngularMomentum}};
 
 #[non_exhaustive]
 pub enum UserInputs {
@@ -29,8 +33,6 @@ pub fn input_parser(mut ship: Query<&mut Ship>, keyboard_input: Res<Input<KeyCod
         }
     }
 }
-
-
 
 pub fn movements_to_vel(
     mut ships: Query<(&Transform, &mut Ship, &mut Velocity, &mut AngularMomentum)>,
