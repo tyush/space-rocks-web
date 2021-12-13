@@ -39,36 +39,10 @@ fn main() {
 
 async fn run_app() {
     println!("Hello, world!");
-    // create_test_game();
 
-    // When building for WASM, print panics to the browser console
+    // when building for wasm, print panics to the browser console
     #[cfg(target_arch = "wasm32")]
     console_error_panic_hook::set_once();
-
-    // #[cfg(target_arch = "wasm32")]
-    // wasm_bindgen::web_console::log_1(&"Starting game creation...".into());
-
-    // let mut map = get_map_from_server();
-
-    // async move {
-    //     map.then(|m| {
-    //         m.unwrap().json::<RaceMap>().then(|race_map| {
-    //             let race_map = race_map.unwrap();
-
-    //             create_app(race_map);
-    //         });
-    //     });
-    // }
-
-    // get_map_from_server().then(|map| {
-    //     if let Ok(m) = map {
-    //         println!("Received map {:?}", &m);
-    //         create_app(m);
-    //     } else {
-    //         panic!("Could not load map from server!")
-    //     }
-    //     get_map_from_server()
-    // });
 
     let g = get_map_from_server().await;
 
@@ -76,16 +50,6 @@ async fn run_app() {
         Ok(map) => create_app(&map),
         Err(_e) => panic!("Unable to parse json map from server!"),
     }
-
-    // g.inspect(|map| {
-    //     if let Ok(m) = map {
-    //         println!("Received map {:?}", &m);
-    //         create_app(m);
-    //     } else {
-    //         close();
-    //         panic!("Could not load map from server!")
-    //     }
-    // });
 }
 
 fn create_app(map: &RaceMap) {
@@ -141,7 +105,7 @@ fn setup(
 ) {
     // let bevy handle changed assets in real time
     // but only if running on native
-    // #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(target_arch = "wasm32"))]
     asset_server.watch_for_changes().unwrap();
 
     // make it look like i put effort into this
@@ -149,7 +113,7 @@ fn setup(
 
     // don't hide cursor if we are in dev build so we can use inspector
     #[cfg(debug_assertions)]
-    // primary_window.set_cursor_visibility(false);
+    primary_window.set_cursor_visibility(false);
 
     // primary_window.set_resizable(false);
     // primary_window.set_scale_factor_override(Some(1.0));
@@ -164,18 +128,9 @@ fn setup(
     let ship_handle: Handle<Texture> =
         asset_server.load("ship.png");
 
-    // commands.insert_resource(TextureResources {
-    //     ship: materials.add((&ship_handle).into()),
-    // });
-
-    let ship_handle = materials.add(ship_handle.into());
-
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(FollowsShip);
-
-    // ship "model"
-    // let ship_model = shape::;
 
     let ship_texture = textures.add(texture::Texture::new(texture::Extent3d { width: 32, height: 32, depth: 1 }, texture::TextureDimension::D1, SHIP_PNG.to_vec(), texture::TextureFormat::Rgba8Unorm));
 
@@ -186,8 +141,6 @@ fn setup(
             ..Default::default()
         })
         .insert(Ship::default())
-        // .insert(WrapScreen)
-        // .insert(screen::Size::square(2.0))
         .insert(Velocity(0.0, 0.0, 0.4))
         .insert(AngularMomentum(0.0, 0.8))
         .insert(ColliderBundle {
@@ -203,61 +156,12 @@ fn setup(
             activation: RigidBodyActivation::cannot_sleep(),
             ccd: RigidBodyCcd { ccd_enabled: true, ..Default::default() },
             ..Default::default()
-        })
-        ;
-
-    // commands
-    //     .spawn_bundle(SpriteBundle {
-    //         material: materials.add(asset_server.load("other_ship.png").into()),
-    //         ..Default::default()
-    //     })
-    //     .insert(Ship::default())
-    //     .insert(WrapScreen)
-    //     .insert(screen::Size::square(2.0))
-    //     .insert(Velocity(0.0, 20.0, 0.2))
-    //     .insert(AngularMomentum(0.0, 0.8));
-
-    // commands
-    //     .spawn_bundle(Timer::new(asset_server.load("arial.ttf"), 20.0));
+        });
+    
     let handle = materials.add(ColorMaterial::color(Color::WHITE));
     if let Some(m) = map {
         m.put_into_world(&mut commands, handle, meshes);
     }
-}
-
-fn add_test_track(
-    mut commands: Commands,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    meshes: ResMut<Assets<Mesh>>,
-) {
-    let m = map_from_ron(
-        "
-    RaceMap(
-        track_points: [
-            (00.0, 00.0),
-            (220.0, 30.0),
-            (440.0, -400.0),
-            (400.0, -800.0),
-            (220.0, -700.0)
-        ],
-        track_points_other: [
-            (40.0, 40.0),
-            (260.0, 70.0),
-            (480.0, -360.0),
-            (440.0, -760.0),
-            (260.0, -660.0)
-        ],
-        finish_line: (
-            (30.0, 20.0),
-            (30.0, 30.0)
-        )   
-    )
-    ",
-    );
-
-    let handle = materials.add(ColorMaterial::color(Color::WHITE));
-
-    m.unwrap().put_into_world(&mut commands, handle, meshes);
 }
 
 struct FollowsShip;
@@ -278,9 +182,3 @@ fn follows_ship(
         );
     }
 }
-
-// fn listen_for_map(
-//     map_res: ResMut<RaceMapHolder>
-// ) {
-
-// }
