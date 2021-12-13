@@ -35,6 +35,7 @@ futures = "*"
 wasm-bindgen-futures = "*"
 bevy-inspector-egui = "*"
 bevy_svg = "0.3"
+bevy_render = "*"
 
 
 [profile.dev.package.bevy_rapier2d]

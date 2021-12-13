@@ -2,6 +2,7 @@ use bevy::prelude::*;
 // use bevy_inspector_egui::Inspectable;
 use ron;
 use serde::{Deserialize, Serialize};
+use bevy_rapier2d::prelude::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RaceMap {
@@ -89,22 +90,29 @@ impl TrackRail {
         rot: f32,
         color: Handle<ColorMaterial>,
         meshes: &mut ResMut<Assets<Mesh>>
-    ) -> bevy::prelude::SpriteBundle {
+    ) -> (bevy::prelude::SpriteBundle, ColliderBundle) {
         let mut transform = Transform::from_xyz(pos.0, pos.1, 0.0); // * length);
         // transform.translation = Vec3::new(pos.0 - (length/2.0), pos.1 - (length/2.0), 0.0);
         transform.rotation = Quat::from_rotation_z(rot);
 
         let sprite = SpriteBundle {
             material: color,
-            mesh: meshes.add(Mesh::from(shape::Quad { size: Vec2::new(length, 1.0), flip: false})),
+            mesh: meshes.add(Mesh::from(bevy::prelude::shape::Quad { size: Vec2::new(length, 1.0), flip: false})),
             sprite: Sprite::new(Vec2::new(length, 1.0)),
             transform, 
             ..Default::default()
         };
 
-        //(
+        (
             sprite
-            //, TrackRail { pos, length, rot })
+            , ColliderBundle {
+                shape: ColliderShape::cuboid(length, 1.0),
+                collider_type: ColliderType::Solid,
+                position: (Vec2::new(pos.0, pos.1), 0.4).into(),
+                material: ColliderMaterial { friction: 0.2, restitution: 0.3, ..Default::default() },
+                mass_properties: ColliderMassProps::Density(2.0),
+                ..Default::default()
+            })
     }
 }
 
@@ -117,7 +125,7 @@ impl TrackPoint {
         other: &TrackPoint,
         handle: Handle<ColorMaterial>,
         meshes: &mut ResMut<Assets<Mesh>>
-    ) -> SpriteBundle {
+    ) -> (SpriteBundle, ColliderBundle) {
         // commands.insert_resource()
         // slope to degrees; see https://www.desmos.com/calculator/vihl4hiveh
         let degree = ((self.1 - other.1) / (self.0 - other.0)).atan(); // * (180.0 / PI); // unit conversion: radians to euler degrees
@@ -128,7 +136,7 @@ impl TrackPoint {
             (self.0 - other.0).powi(2)
             + (self.1 - other.1).powi(2)
         ).sqrt().sqrt();
-        
+        #[allow(unused_doc_comments)]
         /// expanded
         /// 
         /// side2 |\ result 
@@ -140,6 +148,7 @@ impl TrackPoint {
         ///     let side2 = (self.1 - other.1);
         ///     (side1.powi(2) + side2.powi(2)).sqrt()
         /// }
+        #[warn(unused_doc_comments)]
         
         let center_point = ((self.0 + other.0) / 2.0, (self.1 + other.1) / 2.0);
         println!("Making line with origin {:?} and rot {:?} from points {:?} and {:?}", center_point, degree, self, other);
