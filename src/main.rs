@@ -1,5 +1,3 @@
-use std::task::Context;
-
 // weird formatting to allow vscode to collapse the
 // LITERAL GODDAMN PNG IN MY CODE
 const SHIP_PNG: [u8; 4096] = 
@@ -12,8 +10,8 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 use space_rocks_web::{
     input::{input_parser, movements_to_vel},
-    map::{map_from_ron, RaceMap},
-    network::{close, get_map_from_server},
+    map::RaceMap,
+    network::get_map_from_server,
     objects::{timer_system, Ship},
     physics::{
         angular::{angular_momentum, AngularMomentum},

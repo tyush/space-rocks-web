@@ -1,6 +1,4 @@
 use bevy::prelude::*;
-// use bevy_inspector_egui::Inspectable;
-use ron;
 use serde::{Deserialize, Serialize};
 use bevy_rapier2d::prelude::*;
 
@@ -63,17 +61,14 @@ impl RaceMap {
         }
     }
 
-    fn create_offset_point(point: &TrackPoint) -> TrackPoint {
-        // see https://www.desmos.com/calculator/olff0hl6yu
-        TrackPoint(
-            point.0.powi(2).atan() * (point.0 * 1.2),
-            point.1.powi(2).atan() * (point.1 * 1.2)
-        )
-    }
-}
-
-pub fn map_from_ron(file: &str) -> Result<RaceMap, ron::Error> {
-    ron::from_str::<RaceMap>(file)
+    // fn create_offset_point(point: &TrackPoint) -> TrackPoint {
+    //   TODO: add actually good implementation of an offset point
+    //     // see https://www.desmos.com/calculator/olff0hl6yu
+    //     TrackPoint(
+    //         point.0.powi(2).atan() * (point.0 * 1.2),
+    //         point.1.powi(2).atan() * (point.1 * 1.2)
+    //     )
+    // }
 }
 
 #[derive(Debug, Default, Reflect, Clone, Copy)]
@@ -148,7 +143,6 @@ impl TrackPoint {
         ///     let side2 = (self.1 - other.1);
         ///     (side1.powi(2) + side2.powi(2)).sqrt()
         /// }
-        #[warn(unused_doc_comments)]
         
         let center_point = ((self.0 + other.0) / 2.0, (self.1 + other.1) / 2.0);
         println!("Making line with origin {:?} and rot {:?} from points {:?} and {:?}", center_point, degree, self, other);
