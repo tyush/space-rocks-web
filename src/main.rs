@@ -125,9 +125,6 @@ fn setup(
     primary_window
         .set_title("Entirely Too Many Rocks, Just Seriously, There Are Too Many.".to_owned());
 
-    let ship_handle: Handle<Texture> =
-        asset_server.load("ship.png");
-
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(FollowsShip);
