@@ -11,3 +11,5 @@ const SHIP_SPEED: f32 = 600.0; // arbitrary, adjust as needed
 
 /// DON'T CHANGE THIS WITHOUT UPDATING THE ONE IN main.rs:3
 const SERVER_IP_ADDRESS: &str = "http://localhost:8000";
+
+pub struct StaysNearShip(pub f32, pub f32);
