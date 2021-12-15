@@ -1,6 +1,18 @@
-use crate::{input::UserInputs, map::TrackRail, network::close, StaysNearShip};
+use crate::{
+    input::UserInputs,
+    map::{FinishLine, TrackRail},
+    network::close,
+    StaysNearShip,
+};
 
 use bevy::{prelude::*, sprite::collide_aabb::collide};
+use wasm_bindgen::prelude::*;
+
+
+#[wasm_bindgen]
+extern "C" {
+    fn alert(s: &str);
+}
 
 pub struct Ship {
     pub inputs: Vec<UserInputs>,
@@ -79,7 +91,11 @@ pub fn timer_system(
     }
 }
 
-pub fn did_ship_die(rails: Query<(&Transform, &TrackRail)>, ship: Query<&Transform, With<Ship>>) {
+pub fn did_ship_die(
+    rails: Query<(&Transform, &TrackRail, Option<&FinishLine>)>,
+    ship: Query<&Transform, With<Ship>>,
+    timer: Query<&Timer>
+) {
     let ship_size = Vec2::new(24.0, 24.0);
     let ship = ship.single();
     if let Ok(ship) = ship {
@@ -108,7 +124,11 @@ pub fn did_ship_die(rails: Query<(&Transform, &TrackRail)>, ship: Query<&Transfo
                     )
                     .is_some()
                     {
-                        close();
+                        if rail.2.is_some() {
+                            let time_taken = timer.single().unwrap();
+                            alert(&format!("Map completed!\nTime taken: {:.2}", time_taken.0));
+                        }
+                            close();
                     }
                 }
             }

@@ -17,7 +17,7 @@ impl RaceMap {
         &self,
         commands: &mut Commands,
         handle: Handle<ColorMaterial>,
-        mut meshes: ResMut<Assets<Mesh>>,
+        meshes: &mut ResMut<Assets<Mesh>>,
     ) {
         let mut rails = Vec::new();
 
@@ -35,7 +35,7 @@ impl RaceMap {
             // let offset_curr = RaceMap::create_offset_point(curr_point);
             // let offset_next = RaceMap::create_offset_point(next_point);
 
-            rails.push(curr_point.gen_bar_to_point(&next_point, handle.clone(), &mut meshes));
+            rails.push(curr_point.gen_bar_to_point(&next_point, handle.clone(), meshes));
             // rails.push(offset_curr.gen_bar_to_point(&offset_next, handle.clone(), &mut meshes));
         }
 
@@ -53,7 +53,7 @@ impl RaceMap {
             // let offset_curr = RaceMap::create_offset_point(curr_point);
             // let offset_next = RaceMap::create_offset_point(next_point);
 
-            rails.push(curr_point.gen_bar_to_point(&next_point, handle.clone(), &mut meshes));
+            rails.push(curr_point.gen_bar_to_point(&next_point, handle.clone(), meshes));
             // rails.push(offset_curr.gen_bar_to_point(&offset_next, handle.clone(), &mut meshes));
         }
 
@@ -62,14 +62,28 @@ impl RaceMap {
         // these values need to reflect server/src/Lib,java:X_OFFSET
         let blocker_left = (TrackPoint(-700.0, 0.0), TrackPoint(-700.0, -300.0));
         let blocker_right = (TrackPoint(700.0, 0.0), TrackPoint(700.0, -300.0));
-        rails.push(blocker_left.0.gen_bar_to_point(&blocker_left.1, handle.clone(), &mut meshes)); //  |
-        rails.push(blocker_right.0.gen_bar_to_point(&blocker_right.1, handle.clone(), &mut meshes)); //  |    |
-        rails.push(blocker_left.1.gen_bar_to_point(&blocker_right.1, handle.clone(), &mut meshes)); //  |____|
+        rails.push(blocker_left.0.gen_bar_to_point(&blocker_left.1, handle.clone(), meshes)); //  |
+        rails.push(blocker_right.0.gen_bar_to_point(&blocker_right.1, handle.clone(), meshes)); //  |    |
+        rails.push(blocker_left.1.gen_bar_to_point(&blocker_right.1, handle.clone(), meshes)); //  |____|
 
         // commands.spawn_batch(rails);
         for r in rails {
             commands.spawn_bundle(r.0).insert(r.1);
         }
+    }
+
+    pub fn put_finish_in_world(
+        &self,
+        commands: &mut Commands,
+        handle: Handle<ColorMaterial>,
+        mut meshes: ResMut<Assets<Mesh>>
+    ) {
+        let point1 = TrackPoint(self.finish_line.0.0, self.finish_line.0.1);
+        let point2 = TrackPoint(self.finish_line.1.0, self.finish_line.1.1);
+
+        let rail_base = point1.gen_bar_to_point(&point2, handle.clone(), &mut meshes);
+
+        commands.spawn_bundle(rail_base.0).insert(rail_base.1).insert(FinishLine);
     }
 
     pub fn clone_me(&self) -> RaceMap {
@@ -89,6 +103,8 @@ impl RaceMap {
     //     )
     // }
 }
+
+pub struct FinishLine;
 
 #[derive(Debug, Default, Reflect)]
 pub struct TrackRail {

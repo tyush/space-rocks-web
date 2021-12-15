@@ -260,7 +260,7 @@ fn create_app(map: &RaceMap) {
 fn setup(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    meshes: ResMut<Assets<Mesh>>,
+    mut meshes: ResMut<Assets<Mesh>>,
     mut textures: ResMut<Assets<Texture>>,
     mut windows: ResMut<Windows>,
     mut fonts: ResMut<Assets<Font>>,
@@ -326,8 +326,10 @@ fn setup(
     space_rocks_web::objects::Timer::new(1.0, 1.0, 0.0, timer_handle, &mut commands);
 
     let handle = materials.add(ColorMaterial::color(Color::WHITE));
+    let finish_handle = materials.add(ColorMaterial::color(Color::YELLOW));
     if let Some(m) = map {
-        m.put_into_world(&mut commands, handle, meshes);
+        m.put_into_world(&mut commands, handle, &mut meshes);
+        m.put_finish_in_world(&mut commands, finish_handle, meshes);
     }
 }
 
