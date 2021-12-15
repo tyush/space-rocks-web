@@ -163,19 +163,22 @@ const SHIP_PNG: [u8; 4096] = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 ];
 
+const FONT_TTF: [u8; 352224] = *include_bytes!("../assets/arial_bold.ttf");
+
+use ab_glyph::{FontRef, FontArc};
 use bevy::prelude::*;
-use bevy_inspector_egui::WorldInspectorPlugin;
-use bevy_rapier2d::prelude::*;
+// use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_render::texture;
 use space_rocks_web::{
     input::{input_parser, movements_to_vel},
     map::RaceMap,
     network::get_map_from_server,
-    objects::{timer_system, Ship},
+    objects::{did_ship_die, timer_system, Ship},
     physics::{
         angular::{angular_momentum, AngularMomentum},
         velocity::{velocity, Velocity},
     },
+    StaysNearShip
 };
 use wasm_bindgen_futures::spawn_local;
 
@@ -219,6 +222,7 @@ fn create_app(map: &RaceMap) {
     app.insert_resource(map.clone_me());
 
     app.add_startup_system(setup.system())
+        .add_system(did_ship_die.system())
         .add_system(input_parser.system().label(Stages::InputHandling))
         .add_system(
             movements_to_vel
@@ -244,8 +248,11 @@ fn create_app(map: &RaceMap) {
                 .after(Stages::Physics)
                 .label(Stages::ScreenAdjustment),
         )
+        .add_system(
+            stays_near_ship.system().after(Stages::Physics).label(Stages::ScreenAdjustment)
+        )
         .add_system(timer_system.system())
-        .add_plugin(WorldInspectorPlugin::new())
+        // .add_plugin(WorldInspectorPlugin::new())
         .insert_resource(ClearColor(Color::rgb(0.05, 0.05, 0.05)))
         .run();
 }
@@ -256,14 +263,9 @@ fn setup(
     meshes: ResMut<Assets<Mesh>>,
     mut textures: ResMut<Assets<Texture>>,
     mut windows: ResMut<Windows>,
-    asset_server: Res<AssetServer>,
+    mut fonts: ResMut<Assets<Font>>,
     map: Option<Res<RaceMap>>,
 ) {
-    // let bevy handle changed assets in real time
-    // but only if running on native
-    #[cfg(not(target_arch = "wasm32"))]
-    asset_server.watch_for_changes().unwrap();
-
     // make it look like i put effort into this
     let primary_window = windows.get_primary_mut().unwrap();
 
@@ -281,8 +283,11 @@ fn setup(
     primary_window
         .set_title("Entirely Too Many Rocks, Just Seriously, There Are Too Many.".to_owned());
 
+    let mut cam = OrthographicCameraBundle::new_2d();
+    cam.orthographic_projection.scale = 1.5;
+
     commands
-        .spawn_bundle(OrthographicCameraBundle::new_2d())
+        .spawn_bundle(cam)
         .insert(FollowsShip);
 
     let ship_texture = textures.add(texture::Texture::new(
@@ -310,30 +315,15 @@ fn setup(
         })
         .insert(Ship::default())
         .insert(Velocity(0.0, 0.0, 0.4))
-        .insert(AngularMomentum(0.0, 0.8))
-        .insert(ColliderBundle {
-            shape: ColliderShape::round_cuboid(1.0, 1.0, 0.3),
-            collider_type: ColliderType::Solid,
-            material: ColliderMaterial {
-                friction: 0.7,
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(RigidBodyBundle {
-            body_type: RigidBodyType::KinematicVelocityBased,
-            position: Vec2::new(30.0, 30.0).into(),
-            forces: RigidBodyForces {
-                gravity_scale: 0.0,
-                ..Default::default()
-            },
-            activation: RigidBodyActivation::cannot_sleep(),
-            ccd: RigidBodyCcd {
-                ccd_enabled: true,
-                ..Default::default()
-            },
-            ..Default::default()
-        });
+        .insert(AngularMomentum(0.0, 0.8));
+
+    let font = FontRef::try_from_slice(&FONT_TTF).unwrap();
+    let font = FontArc::new(font);
+    let font = Font { font };
+
+    let timer_handle = fonts.add(font);
+
+    space_rocks_web::objects::Timer::new(1.0, 1.0, 0.0, timer_handle, &mut commands);
 
     let handle = materials.add(ColorMaterial::color(Color::WHITE));
     if let Some(m) = map {
@@ -356,6 +346,23 @@ fn follows_ship(
             ship_pos.x,
             ship_pos.y,
             trans.translation.z, // maintain previous visibility
+        );
+    }
+}
+
+fn stays_near_ship(
+    mut query: QuerySet<(
+        Query<(&mut Transform, &StaysNearShip)>,
+        Query<&Transform, With<Ship>>
+    )>
+) {
+    let ship_pos = query.q1().single().unwrap().translation;
+
+    for (mut trans, offset) in query.q0_mut().iter_mut() {
+        trans.translation = Vec3::new(
+            ship_pos.x + offset.0,
+            ship_pos.y + offset.1,
+            trans.translation.z
         );
     }
 }
