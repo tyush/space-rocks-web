@@ -29,7 +29,6 @@ winit = {version="*", optional=true}
 serde = "*"
 console_error_panic_hook = "*"
 wasm-bindgen = {version = "*", features = ["serde-serialize"]}
-bevy_rapier2d = "0.11.0"
 futures = "*"
 wasm-bindgen-futures = "*"
 bevy-inspector-egui = "*"
